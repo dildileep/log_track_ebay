@@ -1,0 +1,36 @@
+
+on: push
+  branches: [ "main" ]
+  paths: [ "model/**" ]
+
+steps:
+  - checkout: self
+  - name: load validation data
+    run: |
+      model = load("models/latest.pkl")
+      X, y = load_data("validation.csv")
+      acc = evaluate(model, X, y)
+      echo "Accuracy: $acc"
+      if acc < 0.85:
+         echo "Model accuracy less, aborting!"
+         exit 1
+
+  - name: Build docker image
+    run: |
+      docker build -t myrepo/ml-model:$GIT_SHA .                
+      docker push myrepo/ml-model:$GIT_SHA                     //we can give any ecr or hub details as per the requirement
+
+  - name: Deploy to K8s
+    run: |
+      kubectl set image deployment/ml-infer app=myrepo/ml-model:$GIT_SHA      //ensure the deplyment files are available in location and with the deps
+      kubectl rollout status deployment/ml-infer --timeout=120s
+
+  - name: Post-deploy verification
+    run: |
+      if not smoke_test("model/health"):
+        kubectl rollout undo deployment/model-deploy
+        log("Deployment rolled back due to failed smoke test")
+        exit 1
+        
+  - name: Notify Sucess
+    run: echo "Model $GIT_SHA deployed successfully"

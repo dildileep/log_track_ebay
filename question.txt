@@ -1,0 +1,31 @@
+**3️⃣ Kubernetes** In Kubernetes, explain how you would ensure zero downtime deployment for an ML model running in production.Include in your explanation: - Type of deployment strategy you’d choose (e.g., RollingUpdate, Blue-Green, Canary). - How you would monitor and rollback if the new version fails. - What role readiness and liveness probes play. 
+
+Ans : 
+
+will start with Rolling update and it gradually replaces the pod without any down time
+monitor via health checks and liveness probes if the threshold breaches you can roll back with rollout undo ,
+
+you can also do an pre and post validation scripts if you have any or do an basic sanity check and that will bring down 70% of problems
+
+readiness is when the pod is ready to start reciving the trafic , normally new spinnedup pods should pass the readyness to handel the traffic ( its basically OPST[on power self test] of the pods)
+
+liveness checks or finds the stuck , crashed container 
+
+
+
+
+
+
+
+
+
+
+**4️⃣ Docker**You are containerizing an ML inference service. Explain: - How you would structure your Dockerfile to ensure small image size and faster builds. - The importance of multi-stage builds. - How to handle environment variables securely inside containers. - How Docker interacts with Kubernetes when deploying the image.
+
+start small like with alpine and once your deps are met make it manifest file and layers for easy re-use of things,
+
+multistage makes the re-use of layers/code/deps..etc
+
+use the secrets,pipeline variables for easy handel , else single kms key with keys and values like dict of list kind of 
+
+k8 pulls image from the hub/ecr --> with image available and acess available --> image pull happens-->creates a pod from the image available -->k8 manages the behaviour of the pod created with configs .
